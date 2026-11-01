@@ -1,0 +1,339 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 100 // tamanho maximo do vetor
+
+// limpa o teclado
+void limparBuffer() {
+    int c;
+    while ((c = getchar()) != '\n') {
+        if (c == EOF) {
+            exit(0);
+        }
+    }
+}
+
+// cria o dados.txt
+void criarArquivo() {
+    int numeros[10] = {45, 12, 89, 3, 67, 21, 90, 34, 8, 56};
+    int i;
+    FILE *arq = fopen("dados.txt", "w");
+
+    if (arq == NULL) {
+        printf("Erro ao criar o arquivo dados.txt!\n");
+        return;
+    }
+
+    for (i = 0; i < 10; i++) {
+        fprintf(arq, "%d\n", numeros[i]);
+    }
+
+    fclose(arq);
+    printf("Arquivo dados.txt criado com 10 numeros.\n");
+}
+
+// le o arquivo e guarda no vetor
+int lerArquivo(char nome[], int vetor[]) {
+    int qtd = 0;
+    int extra;
+    FILE *arq = fopen(nome, "r");
+
+    if (arq == NULL) {
+        return -1;
+    }
+
+    while (qtd < MAX && fscanf(arq, "%d", &vetor[qtd]) == 1) {
+        qtd++;
+    }
+
+    // avisa se tem mais de 100 numeros
+    if (qtd == MAX && fscanf(arq, "%d", &extra) == 1) {
+        printf("Aviso: so os primeiros %d numeros foram lidos.\n", MAX);
+    }
+
+    fclose(arq);
+    return qtd;
+}
+
+// grava o vetor no arquivo
+int gravarArquivo(char nome[], int vetor[], int qtd) {
+    int i;
+    FILE *arq = fopen(nome, "w");
+
+    if (arq == NULL) {
+        return 0;
+    }
+
+    for (i = 0; i < qtd; i++) {
+        fprintf(arq, "%d\n", vetor[i]);
+    }
+
+    fclose(arq);
+    return 1;
+}
+
+// mostra o arquivo na tela
+void mostrarArquivo(char nome[]) {
+    int vetor[MAX];
+    int qtd, i;
+
+    qtd = lerArquivo(nome, vetor);
+
+    if (qtd == -1) {
+        printf("Nao foi possivel abrir %s. Ele ainda nao foi criado?\n", nome);
+        return;
+    }
+    if (qtd == 0) {
+        printf("O arquivo %s esta vazio.\n", nome);
+        return;
+    }
+
+    printf("Conteudo de %s:\n", nome);
+    for (i = 0; i < qtd; i++) {
+        printf("[%d] %d\n", i + 1, vetor[i]);
+    }
+}
+
+void bubbleSort(int v[], int n) {
+    int i, j, aux;
+    for (i = 0; i < n - 1; i++) {
+        for (j = 0; j < n - 1 - i; j++) {
+            if (v[j] > v[j + 1]) {
+                aux = v[j];
+                v[j] = v[j + 1];
+                v[j + 1] = aux;
+            }
+        }
+    }
+}
+
+void insertionSort(int v[], int n) {
+    int i, j, chave;
+    for (i = 1; i < n; i++) {
+        chave = v[i];
+        j = i - 1;
+        while (j >= 0 && v[j] > chave) {
+            v[j + 1] = v[j];
+            j--;
+        }
+        v[j + 1] = chave;
+    }
+}
+
+void selectionSort(int v[], int n) {
+    int i, j, menor, aux;
+    for (i = 0; i < n - 1; i++) {
+        menor = i;
+        for (j = i + 1; j < n; j++) {
+            if (v[j] < v[menor]) {
+                menor = j;
+            }
+        }
+        aux = v[i];
+        v[i] = v[menor];
+        v[menor] = aux;
+    }
+}
+
+// junta as duas metades
+void juntar(int v[], int inicio, int meio, int fim) {
+    int aux[MAX];
+    int i = inicio;
+    int j = meio + 1;
+    int k = 0;
+
+    while (i <= meio && j <= fim) {
+        if (v[i] <= v[j]) {
+            aux[k] = v[i];
+            i++;
+        } else {
+            aux[k] = v[j];
+            j++;
+        }
+        k++;
+    }
+    while (i <= meio) {
+        aux[k] = v[i];
+        i++;
+        k++;
+    }
+    while (j <= fim) {
+        aux[k] = v[j];
+        j++;
+        k++;
+    }
+
+    for (i = 0; i < k; i++) {
+        v[inicio + i] = aux[i];
+    }
+}
+
+void mergeSort(int v[], int inicio, int fim) {
+    int meio;
+    if (inicio < fim) {
+        meio = (inicio + fim) / 2;
+        mergeSort(v, inicio, meio);
+        mergeSort(v, meio + 1, fim);
+        juntar(v, inicio, meio, fim);
+    }
+}
+
+void quickSort(int v[], int inicio, int fim) {
+    int pivo, i, j, aux;
+
+    if (inicio < fim) {
+        pivo = v[fim]; // pivo
+        i = inicio - 1;
+
+        for (j = inicio; j < fim; j++) {
+            if (v[j] <= pivo) {
+                i++;
+                aux = v[i];
+                v[i] = v[j];
+                v[j] = aux;
+            }
+        }
+
+        aux = v[i + 1];
+        v[i + 1] = v[fim];
+        v[fim] = aux;
+
+        quickSort(v, inicio, i);
+        quickSort(v, i + 2, fim);
+    }
+}
+
+// ordena e salva no ordenado.txt
+void ordenarNumeros() {
+    int vetor[MAX];
+    int qtd, escolha;
+
+    qtd = lerArquivo("dados.txt", vetor);
+
+    if (qtd == -1) {
+        printf("Nao foi possivel abrir dados.txt. Use a opcao 1 primeiro.\n");
+        return;
+    }
+    if (qtd == 0) {
+        printf("O arquivo esta vazio.\n");
+        return;
+    }
+
+    printf("Escolha o algoritmo:\n");
+    printf("1 - Bubble Sort\n");
+    printf("2 - Insertion Sort\n");
+    printf("3 - Selection Sort\n");
+    printf("4 - Merge Sort\n");
+    printf("5 - Quick Sort\n");
+    printf("Opcao: ");
+    if (scanf("%d", &escolha) != 1) {
+        limparBuffer();
+        escolha = 0;
+    }
+
+    if (escolha == 1) {
+        bubbleSort(vetor, qtd);
+    } else if (escolha == 2) {
+        insertionSort(vetor, qtd);
+    } else if (escolha == 3) {
+        selectionSort(vetor, qtd);
+    } else if (escolha == 4) {
+        mergeSort(vetor, 0, qtd - 1);
+    } else if (escolha == 5) {
+        quickSort(vetor, 0, qtd - 1);
+    } else {
+        printf("Algoritmo invalido!\n");
+        return;
+    }
+
+    if (gravarArquivo("ordenado.txt", vetor, qtd)) {
+        printf("Numeros ordenados e salvos em ordenado.txt.\n");
+    } else {
+        printf("Erro ao salvar ordenado.txt!\n");
+    }
+}
+
+// altera um valor do dados.txt
+void alterarValor() {
+    int vetor[MAX];
+    int qtd, posicao, novoValor, i;
+
+    qtd = lerArquivo("dados.txt", vetor);
+
+    if (qtd == -1) {
+        printf("Nao foi possivel abrir dados.txt. Use a opcao 1 primeiro.\n");
+        return;
+    }
+    if (qtd == 0) {
+        printf("O arquivo esta vazio.\n");
+        return;
+    }
+
+    for (i = 0; i < qtd; i++) {
+        printf("[%d] %d\n", i + 1, vetor[i]);
+    }
+
+    printf("Digite a posicao que deseja alterar (1 a %d): ", qtd);
+    if (scanf("%d", &posicao) != 1) {
+        limparBuffer();
+        posicao = 0;
+    }
+
+    if (posicao < 1 || posicao > qtd) {
+        printf("Posicao invalida!\n");
+        return;
+    }
+
+    printf("Digite o novo valor: ");
+    if (scanf("%d", &novoValor) != 1) {
+        limparBuffer();
+        printf("Valor invalido!\n");
+        return;
+    }
+
+    vetor[posicao - 1] = novoValor; // troca o valor
+
+    if (gravarArquivo("dados.txt", vetor, qtd)) {
+        printf("Valor alterado e salvo em dados.txt.\n");
+        printf("Ordene de novo (opcao 3) pra atualizar o ordenado.txt.\n");
+    } else {
+        printf("Erro ao salvar dados.txt!\n");
+    }
+}
+
+int main() {
+    int opcao = 0;
+
+    while (opcao != 6) {
+        printf("\n===== MENU =====\n");
+        printf("1. Criar arquivo com numeros\n");
+        printf("2. Mostrar numeros do arquivo\n");
+        printf("3. Ordenar numeros\n");
+        printf("4. Alterar um valor\n");
+        printf("5. Mostrar numeros ordenados\n");
+        printf("6. Sair\n");
+        printf("Opcao: ");
+        if (scanf("%d", &opcao) != 1) {
+            limparBuffer();
+            opcao = 0;
+        }
+
+        if (opcao == 1) {
+            criarArquivo();
+        } else if (opcao == 2) {
+            mostrarArquivo("dados.txt");
+        } else if (opcao == 3) {
+            ordenarNumeros();
+        } else if (opcao == 4) {
+            alterarValor();
+        } else if (opcao == 5) {
+            mostrarArquivo("ordenado.txt");
+        } else if (opcao == 6) {
+            printf("Saindo do programa...\n");
+        } else {
+            printf("Opcao invalida!\n");
+        }
+    }
+
+    return 0;
+}
